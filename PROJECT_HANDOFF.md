@@ -2,11 +2,11 @@
 
 ## 0. المرحلة الحالية
 
-**Phase: 01F — User Repositories**
+**Phase: 01G — DataStore Foundation**
 (المراحل السابقة **01A — Project Bootstrap**، **01B — Navigation Foundation**،
-**01C — Dependency Injection Foundation**، **01D — Core User Models**، و
-**01E — Room Database Foundation** مغلقة رسميًا وناجحة عبر GitHub Actions — التفاصيل في
-القسم 7)
+**01C — Dependency Injection Foundation**، **01D — Core User Models**،
+**01E — Room Database Foundation**، و **01F — User Repositories** مغلقة رسميًا وناجحة عبر
+GitHub Actions — التفاصيل في القسم 7)
 
 ---
 
@@ -23,6 +23,9 @@
 UI). ✅ اعتبارًا من Phase 01E، أصبح لهذه النماذج الثلاثة تخزين فعلي عبر Room (انظر القسم 4.9).
 ✅ اعتبارًا من Phase 01F، أصبحت هذه النماذج الثلاثة قابلة للوصول عبر طبقة Repositories نظيفة
 (انظر القسم 4.10) تفصل الـ domain عن Room بشكل كامل، وتُحقن عبر Hilt.
+✅ اعتبارًا من Phase 01G، أُضيف أساس Preferences DataStore منفصل تمامًا (انظر القسم 4.11)
+لتخزين حالة تطبيق بسيطة فقط (`onboardingCompleted`, `activeUserId`) — لا يكرر أو يستبدل بيانات
+Room الخاصة بـ User Profile/Goal/Preferences.
 كل ميزة مستقبلية (Workout, Nutrition, Recovery, Home) يجب أن **تقرأ** بياناتها من هذه النماذج
 المركزية عبر طبقة الحقن (Hilt، من 01C) بدلاً من بيانات ثابتة أو مكررة. راجع القسم 4 للتفاصيل
 الكاملة.
@@ -45,11 +48,15 @@ UI). ✅ اعتبارًا من Phase 01E، أصبح لهذه النماذج ال
 | minSdk | 24 |
 | Compose Compiler Extension | 1.5.14 |
 
-المشروع لا يزال خاليًا من: DataStore, AppCompat, Material Components الكلاسيكية.
+المشروع لا يزال خاليًا من: AppCompat, Material Components الكلاسيكية.
 
 **ملاحظة (01F):** لم تُضَف أي مكتبة جديدة في هذه المرحلة — طبقة الـ Repositories الجديدة تعتمد
 حصريًا على Room وHilt وKotlin Coroutines الموجودة بالفعل منذ 01C/01E. تم فقط رفع `versionName`
 إلى `"0.5.0-phase01f"`.
+
+**ملاحظة (01G):** أُضيفت مكتبة واحدة فقط: `androidx.datastore:datastore-preferences:1.1.1`
+(Preferences DataStore، بدون Proto DataStore، بدون kapt/KSP). لا اعتماد جديد على Kotlin/AGP/
+Hilt/Room أبعد مما هو موجود بالفعل. تم رفع `versionName` إلى `"0.6.0-phase01g"`.
 
 ---
 
@@ -516,6 +523,104 @@ DAO مباشرة (والـ DAOs نفسها متوفرة في الرسم البي
 
 ---
 
+## 4.11 أساس DataStore (DataStore Foundation) — جديد في 01G
+
+### 4.11.1 نظرة عامة
+
+تمت إضافة أساس Preferences DataStore منفصل تمامًا عن Room، مخصص حصريًا لحالة تطبيق بسيطة
+(simple app-level state) — وليس بديلاً أو تكرارًا لبيانات User Profile/Goal/UserPreferences
+المخزَّنة في Room منذ 01E. هذه المرحلة **DataStore فقط**: لا Onboarding UI، لا App Start Logic،
+لا شاشات جديدة، لا منطق ميزات حقيقي.
+
+الحقول المخزَّنة (نموذج `AppState`):
+
+- `onboardingCompleted: Boolean` — هل انتهى تدفق onboarding مرة واحدة أم لا. هذه حالة تدفق
+  تطبيق (app flow state)، وليست بيانات ملف مستخدم/هدف/تفضيلات.
+- `activeUserId: String?` — أي مستخدم محلي (بمعرّف `userId` يطابق
+  `UserProfile.userId`) هو النشط حاليًا. هذا **مؤشر (pointer)** إلى صف مخزَّن في Room، وليس
+  تكرارًا لبياناته.
+
+**لم تُضَف** إعداد وحدات (units setting) إلى DataStore رغم وجود `UnitSystem` مُعرَّف بوضوح منذ
+01D — لأنه ينتمي إلى `UserPreferences` (صف Room لكل مستخدم)، وليس حالة تطبيق بسيطة مستقلة عن
+المستخدم؛ إضافته هنا كانت ستُكرِّر بيانات Room بدلاً من إكمالها.
+
+### 4.11.2 Gradle Dependencies
+
+في `app/build.gradle.kts`: مكتبة واحدة جديدة فقط —
+`androidx.datastore:datastore-preferences:1.1.1` (Preferences DataStore، وليس Proto
+DataStore). لا تحتاج kapt أو KSP، فلا حاجة لأي تعديل على إعداد `kapt {}` الحالي. `versionName`
+تم رفعه إلى `"0.6.0-phase01g"`.
+
+### 4.11.3 الملفات والمسارات
+
+```
+app/src/main/java/com/gym/app/domain/appstate/AppState.kt              (جديد)
+app/src/main/java/com/gym/app/domain/appstate/AppStateRepository.kt    (جديد — interface)
+app/src/main/java/com/gym/app/data/appstate/AppStateRepositoryImpl.kt  (جديد)
+app/src/main/java/com/gym/app/core/di/DataStoreModule.kt               (جديد)
+app/src/main/java/com/gym/app/core/di/AppStateRepositoryModule.kt      (جديد)
+
+app/src/test/java/com/gym/app/data/appstate/AppStateRepositoryImplTest.kt   (جديد)
+```
+
+### 4.11.4 `AppState` (Domain Layer)
+
+`data class AppState(val onboardingCompleted: Boolean, val activeUserId: String?)` في حزمة
+جديدة `domain/appstate/` (منفصلة عمدًا عن `domain/model/` الخاصة بـ User Profile/Goal/
+Preferences، لتوضيح أن هذا نوع مختلف تمامًا من البيانات). immutable بالكامل، بدون أي اعتماد
+على DataStore/Android/Hilt — نفس قاعدة `domain/model/` من 01D. يحتوي `companion object` بقيمة
+`INITIAL` تمثّل حالة التثبيت الجديد (`onboardingCompleted = false`, `activeUserId = null`).
+
+### 4.11.5 `AppStateRepository` (Domain Layer)
+
+واجهة في `domain/appstate/` تُعرِّف:
+
+- `val appState: Flow<AppState>` — مراقبة تفاعلية لكامل الحالة.
+- `suspend fun setOnboardingCompleted(completed: Boolean)`.
+- `suspend fun setActiveUserId(userId: String?)` — تمرير `null` يمسح المستخدم النشط.
+
+مثل واجهات `domain/repository/` من 01F، لا تظهر أي أنواع DataStore/Preferences في هذا التوقيع
+— نماذج domain وFlow/suspend من Kotlin/Coroutines فقط.
+
+### 4.11.6 `AppStateRepositoryImpl` (Data Layer)
+
+في `data/appstate/` (حزمة منفصلة عن `data/repository/` الخاصة بـ Room، لنفس سبب الفصل في
+الـ domain layer). يستقبل `DataStore<Preferences>` عبر الـ constructor (`@Inject constructor`)
+فقط. يحوّل بين `AppState` ومفاتيح `Preferences` خام (`booleanPreferencesKey`,
+`stringPreferencesKey`) داخل هذا الملف حصريًا — لا تسرّب لأي نوع DataStore إلى الواجهة أو
+النموذج. لا يلمس `AppDatabase` أو أي DAO إطلاقًا.
+
+### 4.11.7 ربط Hilt
+
+- **`DataStoreModule`** (`core/di/DataStoreModule.kt`) — `@Module @InstallIn
+  (SingletonComponent::class)` يوفّر `DataStore<Preferences>` عبر `preferencesDataStore`
+  property delegate (باسم ملف `"app_state"`)، مطلوب `@Provides` (وليس `@Inject` مباشرة) لنفس
+  سبب `DatabaseModule` من 01E: الـ instance لا يُبنى عبر constructor عادي.
+- **`AppStateRepositoryModule`** (`core/di/AppStateRepositoryModule.kt`) — `@Module` منفصل
+  (وليس جزءًا من `RepositoryModule` من 01F) يستخدم `@Binds` لربط `AppStateRepository`
+  بـ `AppStateRepositoryImpl`، بنفس أسلوب `RepositoryModule`. أُبقي منفصلاً عمدًا لتوضيح أن
+  `AppStateRepository` ليس جزءًا من عائلة الـ Repositories المدعومة بـ Room.
+
+### 4.11.8 اختبارات الوحدة (Unit Tests)
+
+`AppStateRepositoryImplTest` (`app/src/test/java/com/gym/app/data/appstate/`) — يستخدم
+`DataStore<Preferences>` حقيقي عبر `PreferenceDataStoreFactory.create` مع ملف مؤقت (temp
+file)، بدلاً من الـ instance المعتمد على Android Context في `DataStoreModule` — لأن هذه
+اختبارات وحدة JVM بحتة (بدون Android Instrumentation)، بنفس منطق `FakeUserProfileDao` من 01F
+(تجنّب اعتماد فعلي على منصة Android في اختبارات الوحدة). يغطي: القيم الافتراضية عند عدم وجود
+بيانات محفوظة، تحديث/عكس `onboardingCompleted`، تخزين/مسح `activeUserId`، واستقلالية الحقلين
+عن بعضهما.
+
+### 4.11.9 لم يتم تنفيذه في 01G (بالتصميم)
+
+لا Onboarding UI، لا App Start Logic، لا أي شاشة UI جديدة، لا Use Cases، لا منطق ميزات حقيقي
+(Workout/Nutrition/Recovery/Home/Smart Assistant)، لا Login، لا Cloud Sync، لا تعديل على أي
+نموذج domain أو Entity أو Mapper أو DAO أو Repository موجود من 01D/01E/01F، لا تكرار لأي بيانات
+Room (تحديدًا: لم يُضَف إعداد وحدات/units إلى DataStore، لأنه ينتمي لـ `UserPreferences` في
+Room — انظر 4.11.1)، لا بدء لأي عمل من Phase 01H.
+
+---
+
 ## 5. قاعدة اللغة العربية فقط (Arabic-only Rule) — لم تتغيّر
 
 كل نص ظاهر للمستخدم يأتي حصريًا من `res/values/strings.xml` عبر `stringResource(...)`. تمت
@@ -548,16 +653,19 @@ DAO مباشرة (والـ DAOs نفسها متوفرة في الرسم البي
 ### Phase 01E — Room Database Foundation
 ✅ **مغلقة رسميًا.** GitHub Actions نجح.
 
-### Phase 01F — User Repositories (هذه المرحلة)
+### Phase 01F — User Repositories
+✅ **مغلقة رسميًا.** GitHub Actions نجح.
+
+### Phase 01G — DataStore Foundation (هذه المرحلة)
 ⏳ **لم يتم تشغيل Build أو Unit Tests فعليًا محليًا.** بيئة التنفيذ الحالية (Sandbox) لا تملك
 اتصال إنترنت، ولا Android SDK، ولا Gradle، ولا حتى Kotlin compiler (`kotlinc`) مثبت مسبقًا — تم
 التحقق من هذا فعليًا مرة أخرى قبل البدء في هذه المرحلة (نفس القيد الذي كان موجودًا في كل
 المراحل السابقة).
 
 **ما تم فعله بدلاً من Build/Test فعلي (تحقق استاتيكي):** راجع القسم "ملاحظة صادقة حول حالة
-Build لمرحلة 01F" في `PROJECT_PHASE.md` للتفاصيل الكاملة لكل خطوات التحقق الاستاتيكي المُنفَّذة
-لهذه المرحلة (توازن الأقواس، نقاء `domain.model`، مقارنة بايت-لبايت مع الملفات السابقة، عدم
-وجود DataStore/Onboarding/UI/Use Cases، إلخ).
+Build لمرحلة 01G" في `PROJECT_PHASE.md` للتفاصيل الكاملة لكل خطوات التحقق الاستاتيكي المُنفَّذة
+لهذه المرحلة (توازن الأقواس، مقارنة بايت-لبايت مع الملفات السابقة، فصل DataStore عن Room، عدم
+وجود Onboarding/UI/Use Cases، إلخ).
 
 **الحالة الحقيقية في `PROJECT_PHASE.md`:** `Status: Pending GitHub Validation` — التزامًا
 بالصدق وعدم الادعاء بنجاح Build أو Tests لم يحدثا فعليًا محليًا. سيتم تأكيد النجاح بعد أول
@@ -674,6 +782,18 @@ app/src/test/java/com/gym/app/data/repository/GoalRepositoryImplTest.kt         
 app/src/test/java/com/gym/app/data/repository/UserPreferencesRepositoryImplTest.kt   (جديد)
 ```
 
+## 8.3 الملفات المُضافة في مرحلة 01G
+
+```
+app/src/main/java/com/gym/app/domain/appstate/AppState.kt               (جديد)
+app/src/main/java/com/gym/app/domain/appstate/AppStateRepository.kt     (جديد)
+app/src/main/java/com/gym/app/data/appstate/AppStateRepositoryImpl.kt   (جديد)
+app/src/main/java/com/gym/app/core/di/DataStoreModule.kt                (جديد)
+app/src/main/java/com/gym/app/core/di/AppStateRepositoryModule.kt       (جديد)
+
+app/src/test/java/com/gym/app/data/appstate/AppStateRepositoryImplTest.kt   (جديد)
+```
+
 ## 9. الملفات المُعدَّلة في مرحلة 01D
 
 ```
@@ -728,9 +848,33 @@ PROJECT_PHASE.md, PROJECT_HANDOFF.md, NEXT_TASK.md — تحديث التوثيق
 Build لمرحلة 01F" في `PROJECT_PHASE.md`) — الفرق الوحيد المكتشف في كامل المشروع هو سطر
 `versionName` في `app/build.gradle.kts`.
 
+## 9.3 الملفات المُعدَّلة في مرحلة 01G
+
+```
+app/build.gradle.kts   — إضافة dependency واحدة فقط
+                          (androidx.datastore:datastore-preferences:1.1.1) ورفع versionName
+                          إلى "0.6.0-phase01g". لم يُمس أي سطر آخر (Compose, Hilt, Navigation,
+                          Room, compileSdk/minSdk/targetSdk, kotlinOptions, kapt block، إلخ —
+                          كلها كما هي بالضبط).
+PROJECT_PHASE.md, PROJECT_HANDOFF.md, NEXT_TASK.md — تحديث التوثيق
+```
+
+**لم يتم لمس أي ملف آخر في 01G.** تحديدًا: `build.gradle.kts` (root)،
+`.github/workflows/build-apk.yml` (إن وُجد لاحقًا — لا يزال يجب أن يبقى مثبَّتًا على
+`gradle-version: '8.7'`)، `settings.gradle.kts`, `gradle.properties`, `gradle/wrapper/*`,
+`gradlew`, `gradlew.bat`, `.gitignore`، كل ملفات `domain/model/` (تحقق بايت-لبايت)، كل ملفات
+`data/local/entity/`, `data/local/dao/`, `data/local/converters/`, `data/local/AppDatabase.kt`,
+`data/mapper/`, `domain/repository/`, `data/repository/` (تحقق بايت-لبايت — طبقة الـ
+Repositories من 01F لم تُعدَّل)، `core/di/DatabaseModule.kt`, `core/di/RepositoryModule.kt`,
+`core/di/AppInfoProvider.kt`, `navigation/`, `ui/`, `GymApplication.kt`, `MainActivity.kt`,
+`AndroidManifest.xml`. تم التحقق من هذا بمقارنة بايت-لبايت مع الـ ZIP المرجعي لمرحلة 01F (راجع
+"ملاحظة صادقة حول حالة Build لمرحلة 01G" في `PROJECT_PHASE.md`) — الفرق الوحيد المكتشف في كامل
+المشروع (بخلاف الملفات الجديدة أعلاه) هو `app/build.gradle.kts` كما هو موضّح.
+
 ---
 
-## 10. قاعدة معمارية المنتج المستقبلية — النماذج أصبح لها Repositories الآن (01F)
+## 10. قاعدة معمارية المنتج المستقبلية — النماذج أصبح لها Repositories الآن (01F)، وحالة
+التطبيق البسيطة أصبح لها DataStore (01G)
 
 بنية المنتج الكاملة مستقبلًا تعتمد جوهريًا على:
 
@@ -751,9 +895,15 @@ Repositories نظيفة (`domain/repository/` + `data/repository/` + `Repository
 - **Recovery** سيعتمد على: User Profile + Preferences + سجل التمارين + سجل النوم + سجل الألم
 - **Home** سيجمّع (aggregate) معلومات من ميزات مختلفة للمستخدم النشط الحالي
 
-⚠️ **مهم:** طبقة الـ Repositories نفسها موجودة الآن (01F)، لكن **لا Use Cases بعد** تُنسِّق منطق
-ميزات حقيقي فوقها، ولا DataStore بعد لتفضيلات لا تخص Room (مثل حالة onboarding نفسها) — ذلك
-سيأتي في مراحل لاحقة (Phase 01G — DataStore Foundation، ثم مراحل الميزات الفعلية).
+✅ منذ Phase 01G، حالة التطبيق البسيطة (`onboardingCompleted`, `activeUserId`) أصبحت متاحة عبر
+`AppStateRepository` (`domain/appstate/` + `data/appstate/` + `DataStoreModule`/
+`AppStateRepositoryModule`، راجع القسم 4.11)، مدعومة بـ Preferences DataStore بدلاً من Room.
+أي App Start Logic مستقبلي (Phase 01H) يجب أن **يقرأ** من `AppStateRepository` — وليس من
+DataStore مباشرة، ولا من قيم ثابتة.
+
+⚠️ **مهم:** طبقة الـ Repositories (01F) وأساس DataStore (01G) موجودان الآن، لكن **لا Use Cases
+بعد** تُنسِّق منطق ميزات حقيقي فوقهما، ولا Onboarding UI، ولا App Start Logic فعلي — ذلك سيأتي
+في مراحل لاحقة (Phase 01H — App Start Logic، ثم مراحل الميزات الفعلية).
 
 ---
 
@@ -767,7 +917,9 @@ Repositories نظيفة (`domain/repository/` + `data/repository/` + `Repository
       Repositories حقيقية بعد)
 - [x] ~~Repositories حقيقية~~ — تم في 01F (تربط الـ domain بـ Room بشكل نظيف عبر
       `domain/repository/` + `data/repository/` + Hilt `@Binds`، بدون Use Cases بعد)
-- [ ] DataStore
+- [x] ~~DataStore~~ — تم في 01G (أساس Preferences DataStore فقط لحالة تطبيق بسيطة —
+      `onboardingCompleted`, `activeUserId` — عبر `domain/appstate/` + `data/appstate/` +
+      Hilt، منفصل تمامًا عن Room، بدون Onboarding UI أو App Start Logic بعد)
 - [ ] Use Cases (تنسيق منطق ميزات حقيقي فوق الـ Repositories)
 - [ ] Onboarding
 - [ ] أي منطق Workout / Nutrition / Smart Assistant حقيقي
@@ -775,7 +927,7 @@ Repositories نظيفة (`domain/repository/` + `data/repository/` + `Repository
 - [ ] دعم لغات متعددة أو تبديل لغة
 - [ ] أي بيانات مستخدم وهمية (Fake user data) أو معلومات شخصية Hardcoded
 - [ ] تشغيل Build/Test فعلي ناجح داخل بيئة Sandbox (سيتم التحقق عبر GitHub Actions)
-- [ ] أي عمل من Phase 01G
+- [ ] أي عمل من Phase 01H
 
 ---
 
@@ -792,18 +944,25 @@ Repositories نظيفة (`domain/repository/` + `data/repository/` + `Repository
 4. **كل نص ظاهر للمستخدم يجب أن يكون عربيًا فقط** عبر `res/values/strings.xml` — ممنوع أي
    نص Hardcoded داخل ملفات Kotlin.
 5. **لا تُنشئ** `res/values-ar/strings.xml` أو أي مجلد لغة إضافي.
-6. **لا تُضِف DataStore قبل مرحلتها المخصصة.** أساس Room (01E) وطبقة الـ Repositories (01F)
-   موجودان الآن، لكن DataStore لا يزال خارج النطاق حتى تُطلَب صراحةً (Phase 01G).
+6. **أساس DataStore (01G) منفصل تمامًا عن Room — حافظ على هذا الفصل.** لا تُضِف بيانات
+   User Profile/Goal/Preferences إلى DataStore، ولا تُضِف حالة تطبيق بسيطة جديدة (مثل
+   `onboardingCompleted`/`activeUserId`) إلى Room. استخدم `AppStateRepository`
+   (`domain/appstate/`) فقط لحالة التطبيق البسيطة، ولا توسّعه إلا بحقول تنتمي فعليًا لنفس
+   الفئة (حالة تدفق تطبيق، وليست بيانات مستخدم/هدف/تفضيلات).
 7. **حافظ على نماذج الـ domain نقية:** لا Room annotations، لا DataStore، لا Android
    framework types، لا Hilt داخل حزمة `domain.model` — التحويل من/إلى Room يتم حصريًا عبر
    `data/mapper/` (راجع القسم 4.9.7)، ليس داخل النماذج نفسها. كذلك حافظ على واجهات
-   `domain/repository/` نقية: لا Room entities ولا Hilt annotations تظهر في توقيعات هذه
-   الواجهات، فقط نماذج domain وFlow/suspend من Kotlin/Coroutines.
+   `domain/repository/` و `domain/appstate/` نقية: لا Room entities، لا DataStore/Preferences
+   types، ولا Hilt annotations تظهر في توقيعات هذه الواجهات، فقط نماذج domain وFlow/suspend من
+   Kotlin/Coroutines.
 8. **GitHub يبقى مصدر الحقيقة (Source of Truth)** — لا تدّعِ نجاح Build أو Tests إلا بعد تأكيد
    فعلي عبر GitHub Actions أو تنفيذ محلي حقيقي.
-9. **لا تبدأ أي مرحلة تالية** (مثل 01G) دون طلب صريح من المستخدم.
+9. **لا تبدأ أي مرحلة تالية** (مثل 01H) دون طلب صريح من المستخدم.
 10. **حافظ على قسم "المشاكل المُصلَحة سابقًا" (Known Fixed Issues، القسم 7.1) دائمًا** — لا
     تحذف أي عنصر منه، وأضِف أي مشكلة جديدة تُكتشف وتُصلَح إلى نفس القسم.
 11. **استخدم الـ Repositories (`domain/repository/`) دائمًا من أي ViewModel/Use Case مستقبلي
     — لا الـ DAOs مباشرة.** طبقة الـ Repositories (01F) هي الآن الحد الفاصل الرسمي بين طبقة
     البيانات (Room) وأي طبقة أعلى.
+12. **استخدم `AppStateRepository` (`domain/appstate/`، 01G) لأي حالة تطبيق بسيطة مستقبلية
+    (مثل App Start Logic في 01H) — لا الوصول إلى `DataStore<Preferences>` مباشرة من خارج
+    `data/appstate/`.**

@@ -16,7 +16,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode = 1
-        versionName = "0.5.0-phase01f"
+        versionName = "0.6.0-phase01g"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -106,6 +106,14 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
+
+    // DataStore Foundation (Phase 01G).
+    // Preferences DataStore only — for simple, app-level state that is not
+    // per-user domain data (see AppStateDataStore). 1.1.1 is the current
+    // stable release and has no dependency on Kotlin/AGP versions beyond
+    // what the project already uses (Kotlin 1.9.24, AGP 8.5.2); it does not
+    // require kapt/KSP, so it needs no annotation-processor wiring.
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
