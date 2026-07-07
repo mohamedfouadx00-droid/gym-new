@@ -11,14 +11,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuBox
+import androidx.compose.material3.DropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenu
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -239,7 +239,7 @@ private fun ExperienceLevelDropdown(
                 .fillMaxWidth()
                 .menuAnchor()
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             ExperienceLevel.entries.forEach { level ->
                 DropdownMenuItem(
                     text = { Text(stringResource(id = labelFor(level))) },
@@ -284,7 +284,7 @@ private fun ActivityLevelDropdown(
                 .fillMaxWidth()
                 .menuAnchor()
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             ActivityLevel.entries.forEach { level ->
                 DropdownMenuItem(
                     text = { Text(stringResource(id = labelFor(level))) },

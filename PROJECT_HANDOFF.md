@@ -1179,3 +1179,22 @@ Use Cases منفصلة بعد فوق طبقة الـ Repositories/AppStateReposi
 12. **استخدم `AppStateRepository` (`domain/appstate/`، 01G) لأي حالة تطبيق بسيطة مستقبلية
     (مثل App Start Logic في 01H) — لا الوصول إلى `DataStore<Preferences>` مباشرة من خارج
     `data/appstate/`.**
+
+## KNOWN FIX #2 — MATERIAL3 EXPOSED DROPDOWN COMPILATION
+
+**Problem:** GitHub Actions failed during `:app:compileDebugKotlin` with:
+
+`Unresolved reference: ExposedDropdownMenu`
+
+**File:**
+
+`app/src/main/java/com/gym/app/ui/screens/OnboardingBasicProfileScreen.kt`
+
+**Root Cause:** The current Material3 setup does not expose `androidx.compose.material3.ExposedDropdownMenu` as used by the screen.
+
+**Fix:** Replaced `ExposedDropdownMenu` with `DropdownMenu` while preserving the existing `ExposedDropdownMenuBox`, anchor behavior, menu items, Arabic UI, RTL, and onboarding logic.
+
+**Do not repeat:** Do not import or use `androidx.compose.material3.ExposedDropdownMenu` unless the project's actual Material3 version is first verified to support it.
+
+**Validation status:** Pending GitHub Actions validation.
+
