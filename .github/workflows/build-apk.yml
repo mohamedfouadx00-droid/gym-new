@@ -21,22 +21,19 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
 
-      - name: Ensure Gradle Wrapper is present
-        # The wrapper scripts (gradlew / gradlew.bat) and
-        # gradle-wrapper.properties are committed to the repo, but the
-        # wrapper jar itself is a binary bootstrap file. This step
-        # (re)generates it from the pinned Gradle version above, so the
-        # build always uses a genuine, verifiable wrapper jar.
+      - name: Generate Gradle Wrapper
         run: gradle wrapper --gradle-version 8.7 --distribution-type bin
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
