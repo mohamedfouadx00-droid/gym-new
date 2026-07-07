@@ -4,86 +4,41 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.gym.app.navigation.AppNavHost
+import com.gym.app.ui.theme.GymTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * PHASE 01A — PROJECT BOOTSTRAP
+ * PHASE 01B — NAVIGATION FOUNDATION
+ * PHASE 01C — DEPENDENCY INJECTION FOUNDATION
  *
- * This is intentionally a minimal, single-screen Activity. Its only job is to
- * confirm that the Android + Kotlin + Jetpack Compose + Gradle toolchain is
- * wired correctly end to end.
+ * MainActivity is intentionally a thin entry point only. It applies the
+ * app theme (which forces RTL layout direction, since the app is
+ * Arabic-only) and hosts the Compose navigation graph ([AppNavHost]).
  *
- * No navigation, no Hilt, no Room, no DataStore, no User Profile / Goal /
- * Preferences models are implemented here. Those arrive in later phases,
- * starting with PHASE 01B — Navigation Foundation.
+ * [@AndroidEntryPoint] makes this Activity part of the Hilt dependency
+ * graph so any Composable hosted here (via hiltViewModel()) can obtain
+ * Hilt-injected ViewModels. This annotation alone adds no feature logic —
+ * MainActivity still contains no business rules or data models.
  */
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            GymBootstrapTheme {
+            GymTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    BootstrapScreen()
+                    AppNavHost()
                 }
             }
         }
-    }
-}
-
-@Composable
-fun BootstrapScreen() {
-    Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "GYM",
-                style = MaterialTheme.typography.displaySmall
-            )
-            Text(
-                text = "Phase 01A — Project Bootstrap",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-            Text(
-                text = "The app is running successfully.",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun GymBootstrapTheme(content: @Composable () -> Unit) {
-    MaterialTheme(content = content)
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun BootstrapScreenPreview() {
-    GymBootstrapTheme {
-        BootstrapScreen()
     }
 }

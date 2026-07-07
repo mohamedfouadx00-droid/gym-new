@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GYM</string>
+
+    <!-- شاشة البداية -->
+    <string name="start_title">البداية</string>
+    <string name="nav_go_home">الرئيسية</string>
+    <string name="nav_go_workout">التمرين</string>
+    <string name="nav_go_progress">التقدم</string>
+    <string name="nav_go_settings">الإعدادات</string>
+
+    <!-- عناوين شاشات اختبار التنقل -->
+    <string name="home_title">الرئيسية</string>
+    <string name="workout_title">التمرين</string>
+    <string name="progress_title">التقدم</string>
+    <string name="settings_title">الإعدادات</string>
+
+    <!-- نصوص مشتركة -->
+    <string name="nav_test_screen_body">هذه شاشة تجريبية لاختبار التنقل فقط، ولا تحتوي على أي ميزة فعلية بعد.</string>
+    <string name="nav_back">رجوع</string>
+
+    <!-- تحقق تقني من عمل الحقن (Phase 01C — Dependency Injection Foundation) -->
+    <string name="start_di_status">الحقن التقني يعمل بنجاح — تطبيق %1$s</string>
 </resources>
