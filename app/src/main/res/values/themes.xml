@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Minimal launch theme.
+
+        This intentionally extends a built-in platform theme only
+        (no AppCompat / Material Components library dependency), since the
+        UI itself is rendered entirely with Jetpack Compose + Compose
+        Material3. This theme only controls the window before Compose
+        takes over, and the system splash/launch background.
+    -->
+    <style name="Theme.GYM" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:statusBarColor">@android:color/white</item>
+    </style>
+</resources>
