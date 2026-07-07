@@ -1198,3 +1198,21 @@ Use Cases منفصلة بعد فوق طبقة الـ Repositories/AppStateReposi
 
 **Validation status:** Pending GitHub Actions validation.
 
+## KNOWN FIX #2A — OVER-BROAD STRING REPLACEMENT DURING FIX1
+
+**Problem:** FIX1 caused additional Kotlin compilation errors for `ExposedDropdownMenuBox`, `ExposedDropdownMenuDefaults`, and `menuAnchor`.
+
+**Root Cause:** The automated text replacement changed the substring `ExposedDropdownMenu` inside valid API names:
+- `ExposedDropdownMenuBox` became `DropdownMenuBox`
+- `ExposedDropdownMenuDefaults` became `DropdownMenuDefaults`
+
+**Fix:** Restored the valid Material3 imports:
+- `androidx.compose.material3.ExposedDropdownMenuBox`
+- `androidx.compose.material3.ExposedDropdownMenuDefaults`
+
+The menu itself remains `DropdownMenu`, which is the intended compatibility fix.
+
+**Do not repeat:** Use exact-token or AST-aware replacements for API migrations. Do not use broad substring replacement when related API names share the same prefix.
+
+**Validation status:** Pending GitHub Actions validation.
+
