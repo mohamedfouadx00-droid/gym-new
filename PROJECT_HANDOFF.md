@@ -2,10 +2,11 @@
 
 ## 0. المرحلة الحالية
 
-**Phase: 01E — Room Database Foundation**
+**Phase: 01F — User Repositories**
 (المراحل السابقة **01A — Project Bootstrap**، **01B — Navigation Foundation**،
-**01C — Dependency Injection Foundation**، و**01D — Core User Models** مغلقة رسميًا وناجحة عبر
-GitHub Actions — التفاصيل في القسم 7)
+**01C — Dependency Injection Foundation**، **01D — Core User Models**، و
+**01E — Room Database Foundation** مغلقة رسميًا وناجحة عبر GitHub Actions — التفاصيل في
+القسم 7)
 
 ---
 
@@ -20,6 +21,8 @@ GitHub Actions — التفاصيل في القسم 7)
 
 ✅ اعتبارًا من Phase 01D، تم تعريف هذه المحاور الثلاثة كنماذج domain نقية (بدون تخزين، بدون
 UI). ✅ اعتبارًا من Phase 01E، أصبح لهذه النماذج الثلاثة تخزين فعلي عبر Room (انظر القسم 4.9).
+✅ اعتبارًا من Phase 01F، أصبحت هذه النماذج الثلاثة قابلة للوصول عبر طبقة Repositories نظيفة
+(انظر القسم 4.10) تفصل الـ domain عن Room بشكل كامل، وتُحقن عبر Hilt.
 كل ميزة مستقبلية (Workout, Nutrition, Recovery, Home) يجب أن **تقرأ** بياناتها من هذه النماذج
 المركزية عبر طبقة الحقن (Hilt، من 01C) بدلاً من بيانات ثابتة أو مكررة. راجع القسم 4 للتفاصيل
 الكاملة.
@@ -43,6 +46,10 @@ UI). ✅ اعتبارًا من Phase 01E، أصبح لهذه النماذج ال
 | Compose Compiler Extension | 1.5.14 |
 
 المشروع لا يزال خاليًا من: DataStore, AppCompat, Material Components الكلاسيكية.
+
+**ملاحظة (01F):** لم تُضَف أي مكتبة جديدة في هذه المرحلة — طبقة الـ Repositories الجديدة تعتمد
+حصريًا على Room وHilt وKotlin Coroutines الموجودة بالفعل منذ 01C/01E. تم فقط رفع `versionName`
+إلى `"0.5.0-phase01f"`.
 
 ---
 
@@ -404,6 +411,111 @@ Phase 01F.
 
 ---
 
+## 4.10 طبقة الـ Repositories (User Repositories) — جديد في 01F
+
+### 4.10.1 نظرة عامة
+
+تمت إضافة طبقة Repositories نظيفة تفصل الـ domain (01D) تمامًا عن Room (01E). هذه الطبقة هي
+الآن الواجهة الوحيدة الموصى باستخدامها من أي ViewModel/Use Case مستقبلي للوصول إلى بيانات
+User Profile + Goal + Preferences — بدلاً من حقن DAOs مباشرة. هذه المرحلة **repositories فقط**:
+لا DataStore، لا Onboarding، لا UI، لا Use Cases، لا منطق ميزات حقيقي.
+
+### 4.10.2 الملفات والمسارات
+
+```
+app/src/main/java/com/gym/app/domain/repository/UserProfileRepository.kt       (جديد — interface)
+app/src/main/java/com/gym/app/domain/repository/GoalRepository.kt              (جديد — interface)
+app/src/main/java/com/gym/app/domain/repository/UserPreferencesRepository.kt   (جديد — interface)
+
+app/src/main/java/com/gym/app/data/repository/UserProfileRepositoryImpl.kt       (جديد)
+app/src/main/java/com/gym/app/data/repository/GoalRepositoryImpl.kt              (جديد)
+app/src/main/java/com/gym/app/data/repository/UserPreferencesRepositoryImpl.kt   (جديد)
+
+app/src/main/java/com/gym/app/core/di/RepositoryModule.kt   (جديد — Hilt @Binds module)
+
+app/src/test/java/com/gym/app/data/local/fake/FakeUserProfileDao.kt          (جديد)
+app/src/test/java/com/gym/app/data/local/fake/FakeGoalDao.kt                 (جديد)
+app/src/test/java/com/gym/app/data/local/fake/FakeUserPreferencesDao.kt      (جديد)
+
+app/src/test/java/com/gym/app/data/repository/UserProfileRepositoryImplTest.kt       (جديد)
+app/src/test/java/com/gym/app/data/repository/GoalRepositoryImplTest.kt              (جديد)
+app/src/test/java/com/gym/app/data/repository/UserPreferencesRepositoryImplTest.kt   (جديد)
+```
+
+### 4.10.3 واجهات الـ Repository (Domain Layer)
+
+كل واجهة في `domain/repository/` تُعرِّف فقط العمليات ذات المعنى الفعلي لهذه المرحلة التأسيسية،
+وتُرجِع نماذج domain نقية فقط (لا Room entities تظهر خارج `data/`):
+
+- **`UserProfileRepository`** — `observeByUserId(userId): Flow<UserProfile?>`,
+  `getByUserId(userId): UserProfile?`, `save(userProfile)`, `deleteByUserId(userId)`.
+- **`GoalRepository`** — يعكس أن المستخدم قد يملك أكثر من هدف عبر الزمن (نفس افتراض
+  `GoalDao` من 01E): `observeByUserId(userId): Flow<List<Goal>>`,
+  `getByUserId(userId): List<Goal>`, `getByGoalId(goalId): Goal?`, `save(goal)`,
+  `deleteByGoalId(goalId)`.
+- **`UserPreferencesRepository`** — صف واحد لكل مستخدم (يطابق `UserPreferencesDao`):
+  `observeByUserId(userId): Flow<UserPreferences?>`, `getByUserId(userId): UserPreferences?`,
+  `save(userPreferences)`, `deleteByUserId(userId)`.
+
+لا توجد أي دالة إضافية غير مطلوبة (لا بحث، لا فرز، لا تصفية متقدمة) — هذه مرحلة تأسيسية فقط.
+
+### 4.10.4 التنفيذات (Data Layer)
+
+كل تنفيذ (`*RepositoryImpl` في `data/repository/`) يستقبل الـ DAO المقابل له عبر الـ constructor
+(`@Inject constructor`) فقط — بدون أي منطق تحويل داخلي؛ التحويل بين domain وEntity يتم حصريًا
+عبر دوال `toEntity()`/`toDomain()` الموجودة بالفعل في `data/mapper/` منذ 01E
+(`UserProfileMapper`, `GoalMapper`, `UserPreferencesMapper`). لم تُعدَّل أي دالة Mapper موجودة،
+ولم يُضَف أي منطق تحويل جديد داخل طبقة الـ Repository نفسها.
+
+القراءة عبر `Flow` (`observeByUserId`) تُنفَّذ بتطبيق `.map { it?.toDomain() }` (أو
+`.map { list -> list.map { it.toDomain() } }` لحالة `GoalRepository`) مباشرة على الـ `Flow` الذي
+يُرجعه الـ DAO — دون أي حالة (state) إضافية أو تخزين مؤقت (caching) في هذه المرحلة.
+
+### 4.10.5 ربط Hilt (`RepositoryModule`)
+
+الملف: `app/src/main/java/com/gym/app/core/di/RepositoryModule.kt`
+
+`abstract class` بـ `@Module @InstallIn(SingletonComponent::class)` يستخدم `@Binds` (وليس
+`@Provides`) لربط كل واجهة بتنفيذها:
+
+```kotlin
+@Binds
+@Singleton
+abstract fun bindUserProfileRepository(impl: UserProfileRepositoryImpl): UserProfileRepository
+```
+
+تم اختيار `@Binds` تحديدًا لأن كل تنفيذ يملك بالفعل `constructor` معلَّم بـ `@Inject` يستقبل الـ
+DAO مباشرة (والـ DAOs نفسها متوفرة في الرسم البياني لـ Hilt عبر `DatabaseModule` من 01E) — هذا
+هو الأسلوب الأقل تعقيدًا والموصى به رسميًا لربط تنفيذ جاهز بواجهته، بعكس `@Provides` الذي كان
+سيتطلب استدعاء الـ constructor يدويًا بلا داعٍ (كما هو مستخدم في `DatabaseModule` فقط لأن
+`AppDatabase` لا يُبنى عبر constructor عادي).
+
+### 4.10.6 اختبارات الوحدة (Repository Unit Tests)
+
+بما أن المشروع لا يحتوي على أي مكتبة Mocking (لا Mockito، لا MockK) وبما أن اختبارات Room
+الحقيقية تحتاج بيئة instrumented (كما في `AppDatabaseTest` من 01E)، تم اتباع نفس الأسلوب المتبع
+فعليًا في المشروع: اختبارات وحدة بسيطة بـ JUnit 4 فقط + DAOs وهمية (fakes) في الذاكرة، دون أي
+اعتماد على Room أو Android Instrumentation:
+
+- **`FakeUserProfileDao`, `FakeGoalDao`, `FakeUserPreferencesDao`**
+  (`app/src/test/java/com/gym/app/data/local/fake/`) — تنفيذ بسيط لكل واجهة DAO باستخدام
+  `MutableStateFlow<Map<...>>` كمخزن في الذاكرة، يحاكي فقط شكل الاستعلامات الحقيقية (بدون أي
+  SQL فعلي). سلوك SQLite الفعلي مغطّى بالفعل عبر `AppDatabaseTest` (01E)، فلا داعي لتكراره هنا.
+- **`UserProfileRepositoryImplTest`, `GoalRepositoryImplTest`,
+  `UserPreferencesRepositoryImplTest`** (`app/src/test/java/com/gym/app/data/repository/`) —
+  تتحقق أن كل `*RepositoryImpl` يُفوِّض بشكل صحيح لواجهة الـ DAO، ويحوّل بشكل صحيح عبر
+  Mapper الموجود، ويحافظ على دلالات `userId`/`goalId` (بما في ذلك تعدد الأهداف لكل مستخدم في
+  حالة `Goal`): حفظ ثم قراءة، استبدال عند نفس المعرّف، المراقبة عبر `Flow` (`first()` مع
+  `runTest`)، والحذف. لم تُضَف اختبارات بلا فائدة حقيقية.
+
+### 4.10.7 لم يتم تنفيذه في 01F (بالتصميم)
+
+لا DataStore، لا Onboarding UI، لا أي شاشة UI جديدة، لا Use Cases، لا منطق ميزات حقيقي
+(Workout/Nutrition/Recovery/Home/Smart Assistant)، لا Login، لا Cloud Sync، لا تعديل على أي
+نموذج domain أو Entity أو Mapper أو DAO موجود من 01D/01E، لا بدء لأي عمل من Phase 01G.
+
+---
+
 ## 5. قاعدة اللغة العربية فقط (Arabic-only Rule) — لم تتغيّر
 
 كل نص ظاهر للمستخدم يأتي حصريًا من `res/values/strings.xml` عبر `stringResource(...)`. تمت
@@ -433,15 +545,19 @@ Phase 01F.
 ### Phase 01D — Core User Models
 ✅ **مغلقة رسميًا.** GitHub Actions نجح.
 
-### Phase 01E — Room Database Foundation (هذه المرحلة)
-⏳ **لم يتم تشغيل Build أو Unit Tests أو الاختبارات المُدمَجة فعليًا محليًا.** بيئة التنفيذ
-الحالية (Sandbox) لا تملك اتصال إنترنت، ولا Android SDK، ولا Gradle، ولا حتى Kotlin compiler
-(`kotlinc`) مثبت مسبقًا — تم التحقق من هذا فعليًا مرة أخرى قبل البدء في هذه المرحلة.
+### Phase 01E — Room Database Foundation
+✅ **مغلقة رسميًا.** GitHub Actions نجح.
+
+### Phase 01F — User Repositories (هذه المرحلة)
+⏳ **لم يتم تشغيل Build أو Unit Tests فعليًا محليًا.** بيئة التنفيذ الحالية (Sandbox) لا تملك
+اتصال إنترنت، ولا Android SDK، ولا Gradle، ولا حتى Kotlin compiler (`kotlinc`) مثبت مسبقًا — تم
+التحقق من هذا فعليًا مرة أخرى قبل البدء في هذه المرحلة (نفس القيد الذي كان موجودًا في كل
+المراحل السابقة).
 
 **ما تم فعله بدلاً من Build/Test فعلي (تحقق استاتيكي):** راجع القسم "ملاحظة صادقة حول حالة
-Build لمرحلة 01E" في `PROJECT_PHASE.md` للتفاصيل الكاملة لكل خطوات التحقق الاستاتيكي المُنفَّذة
+Build لمرحلة 01F" في `PROJECT_PHASE.md` للتفاصيل الكاملة لكل خطوات التحقق الاستاتيكي المُنفَّذة
 لهذه المرحلة (توازن الأقواس، نقاء `domain.model`، مقارنة بايت-لبايت مع الملفات السابقة، عدم
-وجود Repositories/DataStore/Onboarding، إلخ).
+وجود DataStore/Onboarding/UI/Use Cases، إلخ).
 
 **الحالة الحقيقية في `PROJECT_PHASE.md`:** `Status: Pending GitHub Validation` — التزامًا
 بالصدق وعدم الادعاء بنجاح Build أو Tests لم يحدثا فعليًا محليًا. سيتم تأكيد النجاح بعد أول
@@ -536,6 +652,28 @@ app/src/test/java/com/gym/app/data/mapper/UserPreferencesMapperTest.kt     (جد
 app/src/androidTest/java/com/gym/app/data/local/AppDatabaseTest.kt         (جديد)
 ```
 
+## 8.2 الملفات المُضافة في مرحلة 01F
+
+```
+app/src/main/java/com/gym/app/domain/repository/UserProfileRepository.kt       (جديد)
+app/src/main/java/com/gym/app/domain/repository/GoalRepository.kt              (جديد)
+app/src/main/java/com/gym/app/domain/repository/UserPreferencesRepository.kt   (جديد)
+
+app/src/main/java/com/gym/app/data/repository/UserProfileRepositoryImpl.kt       (جديد)
+app/src/main/java/com/gym/app/data/repository/GoalRepositoryImpl.kt              (جديد)
+app/src/main/java/com/gym/app/data/repository/UserPreferencesRepositoryImpl.kt   (جديد)
+
+app/src/main/java/com/gym/app/core/di/RepositoryModule.kt   (جديد)
+
+app/src/test/java/com/gym/app/data/local/fake/FakeUserProfileDao.kt          (جديد)
+app/src/test/java/com/gym/app/data/local/fake/FakeGoalDao.kt                 (جديد)
+app/src/test/java/com/gym/app/data/local/fake/FakeUserPreferencesDao.kt      (جديد)
+
+app/src/test/java/com/gym/app/data/repository/UserProfileRepositoryImplTest.kt       (جديد)
+app/src/test/java/com/gym/app/data/repository/GoalRepositoryImplTest.kt              (جديد)
+app/src/test/java/com/gym/app/data/repository/UserPreferencesRepositoryImplTest.kt   (جديد)
+```
+
 ## 9. الملفات المُعدَّلة في مرحلة 01D
 
 ```
@@ -569,9 +707,30 @@ PROJECT_PHASE.md, PROJECT_HANDOFF.md, NEXT_TASK.md — تحديث التوثيق
 بايت-لبايت مع الـ ZIP المرجعي لمرحلة 01D (راجع "ملاحظة صادقة حول حالة Build لمرحلة 01E" في
 `PROJECT_PHASE.md`).
 
+## 9.2 الملفات المُعدَّلة في مرحلة 01F
+
+```
+app/build.gradle.kts   — رفع versionName فقط إلى "0.5.0-phase01f". سطر واحد فقط تغيَّر
+                          (تحقق diff فعلي، راجع الملاحظة الصادقة أدناه). لم تُضَف أي
+                          dependency جديدة — طبقة الـ Repositories تعتمد حصريًا على
+                          Room/Hilt/Coroutines الموجودة بالفعل منذ 01C/01E.
+PROJECT_PHASE.md, PROJECT_HANDOFF.md, NEXT_TASK.md — تحديث التوثيق
+```
+
+**لم يتم لمس أي ملف آخر في 01F.** تحديدًا: `build.gradle.kts` (root)،
+`.github/workflows/build-apk.yml` (إن وُجد لاحقًا — لا يزال يجب أن يبقى مثبَّتًا على
+`gradle-version: '8.7'`)، `settings.gradle.kts`, `gradle.properties`, `gradle/wrapper/*`,
+`gradlew`, `gradlew.bat`, `.gitignore`، كل ملفات `domain/model/` (تحقق بايت-لبايت)، كل ملفات
+`data/local/entity/`, `data/local/dao/`, `data/local/converters/`, `data/local/AppDatabase.kt`,
+`data/mapper/` (تحقق بايت-لبايت — لم يُعدَّل أي Mapper موجود)، `core/di/DatabaseModule.kt`,
+`core/di/AppInfoProvider.kt`, `navigation/`, `ui/`, `GymApplication.kt`, `MainActivity.kt`.
+تم التحقق من هذا بمقارنة بايت-لبايت مع الـ ZIP المرجعي لمرحلة 01E (راجع "ملاحظة صادقة حول حالة
+Build لمرحلة 01F" في `PROJECT_PHASE.md`) — الفرق الوحيد المكتشف في كامل المشروع هو سطر
+`versionName` في `app/build.gradle.kts`.
+
 ---
 
-## 10. قاعدة معمارية المنتج المستقبلية — النماذج أصبح لها تخزين الآن (01E)
+## 10. قاعدة معمارية المنتج المستقبلية — النماذج أصبح لها Repositories الآن (01F)
 
 بنية المنتج الكاملة مستقبلًا تعتمد جوهريًا على:
 
@@ -580,18 +739,21 @@ PROJECT_PHASE.md, PROJECT_HANDOFF.md, NEXT_TASK.md — تحديث التوثيق
 ✅ منذ Phase 01D، هذه النماذج الثلاثة موجودة فعليًا كـ domain models نقية في
 `app/src/main/java/com/gym/app/domain/model/` (راجع القسم 4.8). ✅ منذ Phase 01E، أصبح لهذه
 النماذج تخزين فعلي عبر Room (Entities + DAOs + AppDatabase + Mappers، راجع القسم 4.9)، متاح
-للحقن عبر Hilt (`DatabaseModule`). كل ميزة مستقبلية يجب أن **تقرأ** بياناتها الخاصة بالمستخدم
-من هذه النماذج المركزية — عبر طبقة Repositories ستُبنى في Phase 01F فوق DAOs/Mappers الحالية —
-بدلاً من استخدام بيانات ثابتة معزولة أو حالة مستخدم مكررة في كل ميزة على حدة. أمثلة:
+للحقن عبر Hilt (`DatabaseModule`). ✅ منذ Phase 01F، أصبحت هذه النماذج قابلة للوصول عبر طبقة
+Repositories نظيفة (`domain/repository/` + `data/repository/` + `RepositoryModule`، راجع
+القسم 4.10) تفصل الـ domain تمامًا عن Room. كل ميزة مستقبلية يجب أن **تقرأ** بياناتها الخاصة
+بالمستخدم من هذه الـ Repositories — عبر حقن `UserProfileRepository`/`GoalRepository`/
+`UserPreferencesRepository` (لا الـ DAOs مباشرة، ولا الـ Entities) — بدلاً من استخدام بيانات
+ثابتة معزولة أو حالة مستخدم مكررة في كل ميزة على حدة. أمثلة:
 
 - **Workout** سيعتمد على: User Profile + Goal + Preferences
 - **Nutrition** سيعتمد على: User Profile + Goal + Preferences
 - **Recovery** سيعتمد على: User Profile + Preferences + سجل التمارين + سجل النوم + سجل الألم
 - **Home** سيجمّع (aggregate) معلومات من ميزات مختلفة للمستخدم النشط الحالي
 
-⚠️ **مهم:** التخزين نفسه (Entities/DAOs/Database) موجود الآن، لكن **لا Repositories حقيقية بعد**
-تربط طبقة الـ domain بطبقة الـ Room بشكل نظيف قابل للاستخدام من ViewModels — ذلك سيأتي في
-Phase 01F — User Repositories.
+⚠️ **مهم:** طبقة الـ Repositories نفسها موجودة الآن (01F)، لكن **لا Use Cases بعد** تُنسِّق منطق
+ميزات حقيقي فوقها، ولا DataStore بعد لتفضيلات لا تخص Room (مثل حالة onboarding نفسها) — ذلك
+سيأتي في مراحل لاحقة (Phase 01G — DataStore Foundation، ثم مراحل الميزات الفعلية).
 
 ---
 
@@ -603,15 +765,17 @@ Phase 01F — User Repositories.
 - [x] ~~Preferences (Model)~~ — تم في 01D (domain model فقط، بدون تخزين)
 - [x] ~~Room / Database~~ — تم في 01E (Entities + DAOs + AppDatabase + Mappers، بدون
       Repositories حقيقية بعد)
+- [x] ~~Repositories حقيقية~~ — تم في 01F (تربط الـ domain بـ Room بشكل نظيف عبر
+      `domain/repository/` + `data/repository/` + Hilt `@Binds`، بدون Use Cases بعد)
 - [ ] DataStore
-- [ ] Repositories حقيقية (تربط الـ domain بـ Room بشكل نظيف للاستخدام من ViewModels)
+- [ ] Use Cases (تنسيق منطق ميزات حقيقي فوق الـ Repositories)
 - [ ] Onboarding
 - [ ] أي منطق Workout / Nutrition / Smart Assistant حقيقي
 - [ ] Login / Cloud Sync
 - [ ] دعم لغات متعددة أو تبديل لغة
 - [ ] أي بيانات مستخدم وهمية (Fake user data) أو معلومات شخصية Hardcoded
 - [ ] تشغيل Build/Test فعلي ناجح داخل بيئة Sandbox (سيتم التحقق عبر GitHub Actions)
-- [ ] أي عمل من Phase 01F
+- [ ] أي عمل من Phase 01G
 
 ---
 
@@ -620,22 +784,26 @@ Phase 01F — User Repositories.
 1. **لا تعيد بناء المشروع من الصفر.** هذا المستودع على GitHub هو مصدر الحقيقة الوحيد بين
    المراحل والجلسات المستقبلية.
 2. **لا تحذف أو تستبدل** أي ميزة تعمل حاليًا (Gradle setup, Workflow, بنية التنقل, أساس
-   الحقن, نماذج الـ domain, أساس Room) إلا إذا طُلب ذلك صراحة.
+   الحقن, نماذج الـ domain, أساس Room, طبقة الـ Repositories) إلا إذا طُلب ذلك صراحة.
 3. **لا تُدرِج أي بيانات مستخدم Hardcoded** في أي مكان — كل بيانات المستخدم الحقيقية يجب أن
    تأتي لاحقًا من النموذج المركزي (User Profile + Goal + Preferences، الموجود الآن في
-   `domain/model/` مع تخزين Room في `data/local/`) عبر طبقة الحقن وRepositories مستقبلية
-   (Phase 01F)، وليس من قيم ثابتة داخل الكود.
+   `domain/model/` مع تخزين Room في `data/local/` وطبقة Repositories في `domain/repository/`
+   و`data/repository/`) عبر طبقة الحقن، وليس من قيم ثابتة داخل الكود.
 4. **كل نص ظاهر للمستخدم يجب أن يكون عربيًا فقط** عبر `res/values/strings.xml` — ممنوع أي
    نص Hardcoded داخل ملفات Kotlin.
 5. **لا تُنشئ** `res/values-ar/strings.xml` أو أي مجلد لغة إضافي.
-6. **لا تُضِف DataStore قبل مرحلتها المخصصة.** أساس Room (01E) موجود الآن، لكن DataStore لا
-   يزال خارج النطاق حتى تُطلَب صراحةً.
+6. **لا تُضِف DataStore قبل مرحلتها المخصصة.** أساس Room (01E) وطبقة الـ Repositories (01F)
+   موجودان الآن، لكن DataStore لا يزال خارج النطاق حتى تُطلَب صراحةً (Phase 01G).
 7. **حافظ على نماذج الـ domain نقية:** لا Room annotations، لا DataStore، لا Android
    framework types، لا Hilt داخل حزمة `domain.model` — التحويل من/إلى Room يتم حصريًا عبر
-   `data/mapper/` (راجع القسم 4.9.7)، ليس داخل النماذج نفسها.
+   `data/mapper/` (راجع القسم 4.9.7)، ليس داخل النماذج نفسها. كذلك حافظ على واجهات
+   `domain/repository/` نقية: لا Room entities ولا Hilt annotations تظهر في توقيعات هذه
+   الواجهات، فقط نماذج domain وFlow/suspend من Kotlin/Coroutines.
 8. **GitHub يبقى مصدر الحقيقة (Source of Truth)** — لا تدّعِ نجاح Build أو Tests إلا بعد تأكيد
    فعلي عبر GitHub Actions أو تنفيذ محلي حقيقي.
-9. **لا تبدأ أي مرحلة تالية** (مثل 01F) دون طلب صريح من المستخدم.
+9. **لا تبدأ أي مرحلة تالية** (مثل 01G) دون طلب صريح من المستخدم.
 10. **حافظ على قسم "المشاكل المُصلَحة سابقًا" (Known Fixed Issues، القسم 7.1) دائمًا** — لا
     تحذف أي عنصر منه، وأضِف أي مشكلة جديدة تُكتشف وتُصلَح إلى نفس القسم.
-
+11. **استخدم الـ Repositories (`domain/repository/`) دائمًا من أي ViewModel/Use Case مستقبلي
+    — لا الـ DAOs مباشرة.** طبقة الـ Repositories (01F) هي الآن الحد الفاصل الرسمي بين طبقة
+    البيانات (Room) وأي طبقة أعلى.
