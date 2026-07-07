@@ -37,11 +37,19 @@ sealed class Routes(val route: String) {
         /** First real onboarding screen: basic profile input. */
         data object BasicProfile : Onboarding("onboarding_basic_profile")
 
-        /**
-         * Placeholder destination reached after a valid basic profile is
-         * saved. Reserved for future Goal Setup (Phase 02C). Implements no
-         * feature logic itself.
-         */
-        data object NextPlaceholder : Onboarding("onboarding_next_placeholder")
+        /** PHASE 02C — Goal Setup. */
+        data object GoalSetup : Onboarding("onboarding_goal_setup")
+
+        /** PHASE 02D — Workout Preferences. */
+        data object WorkoutPreferences : Onboarding("onboarding_workout_preferences")
+
+        /** PHASE 02E — Lifestyle Preferences. */
+        data object LifestylePreferences : Onboarding("onboarding_lifestyle_preferences")
+
+        /** PHASE 02F — Final onboarding completion step. */
+        data object Complete : Onboarding("onboarding_complete")
     }
+
+    /** PHASE 02G — Profile screen. */
+    data object Profile : Routes("profile")
 }

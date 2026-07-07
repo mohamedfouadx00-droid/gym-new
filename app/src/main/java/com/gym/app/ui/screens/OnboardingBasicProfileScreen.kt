@@ -60,7 +60,7 @@ fun OnboardingBasicProfileScreen(
 
     LaunchedEffect(uiState.saveComplete) {
         if (uiState.saveComplete) {
-            navController.navigate(Routes.Onboarding.NextPlaceholder.route) {
+            navController.navigate(Routes.Onboarding.GoalSetup.route) {
                 popUpTo(Routes.Onboarding.BasicProfile.route) { inclusive = true }
             }
         }

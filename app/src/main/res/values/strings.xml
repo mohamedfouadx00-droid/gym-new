@@ -52,7 +52,78 @@
     <string name="activity_level_extra_active">نشاط عالٍ جدًا</string>
     <string name="onboarding_save_and_continue">حفظ ومتابعة</string>
 
-    <!-- عنصر نائب لمرحلة تالية (Phase 02C — Goal Setup لاحقًا) -->
-    <string name="onboarding_next_placeholder_title">تم حفظ ملفك الشخصي</string>
-    <string name="onboarding_next_placeholder_body">الخطوة التالية (تحديد الهدف) ستتوفر قريبًا.</string>
+    <!-- خطأ عام: لا يوجد مستخدم نشط -->
+    <string name="onboarding_error_no_active_user">تعذر العثور على مستخدم نشط. الرجاء إعادة تسجيل بياناتك الأساسية.</string>
+
+    <!-- تحديد الهدف (Phase 02C — Goal Setup) -->
+    <string name="onboarding_goal_setup_title">حدد هدفك</string>
+    <string name="onboarding_goal_setup_subtitle">اختر هدفك الرئيسي وأي أهداف إضافية ترغب بها</string>
+    <string name="onboarding_field_primary_goal">الهدف الرئيسي</string>
+    <string name="onboarding_field_target_weight">الوزن المستهدف (كجم)</string>
+    <string name="onboarding_field_target_weight_error">الرجاء إدخال وزن مستهدف صحيح</string>
+    <string name="onboarding_field_secondary_goals">أهداف إضافية (اختياري)</string>
+    <string name="primary_goal_weight_gain">زيادة الوزن</string>
+    <string name="primary_goal_weight_loss">فقدان الوزن</string>
+    <string name="primary_goal_muscle_building">بناء العضلات</string>
+    <string name="primary_goal_strength">زيادة القوة</string>
+    <string name="primary_goal_maintenance">المحافظة على الوزن</string>
+    <string name="primary_goal_general_fitness">لياقة عامة</string>
+
+    <!-- تفضيلات التمرين (Phase 02D — Workout Preferences) -->
+    <string name="onboarding_workout_preferences_title">تفضيلات التمرين</string>
+    <string name="onboarding_workout_preferences_subtitle">أخبرنا كيف ومتى تفضل التمرين</string>
+    <string name="onboarding_field_workout_location">مكان التمرين</string>
+    <string name="onboarding_field_preferred_workout_days">أيام التمرين المفضلة</string>
+    <string name="onboarding_field_rest_days">أيام الراحة</string>
+    <string name="onboarding_field_days_overlap_error">لا يمكن أن يكون اليوم يوم تمرين وراحة في نفس الوقت</string>
+    <string name="onboarding_field_preferred_workout_time">الوقت المفضل للتمرين (اختياري)</string>
+    <string name="onboarding_field_hour">الساعة</string>
+    <string name="onboarding_field_minute">الدقيقة</string>
+    <string name="onboarding_field_time_error">الرجاء إدخال وقت صحيح</string>
+    <string name="workout_location_home">المنزل</string>
+    <string name="workout_location_gym">النادي الرياضي</string>
+    <string name="workout_location_outdoor">في الهواء الطلق</string>
+    <string name="weekday_monday">الاثنين</string>
+    <string name="weekday_tuesday">الثلاثاء</string>
+    <string name="weekday_wednesday">الأربعاء</string>
+    <string name="weekday_thursday">الخميس</string>
+    <string name="weekday_friday">الجمعة</string>
+    <string name="weekday_saturday">السبت</string>
+    <string name="weekday_sunday">الأحد</string>
+
+    <!-- تفضيلات نمط الحياة (Phase 02E — Lifestyle Preferences) -->
+    <string name="onboarding_lifestyle_preferences_title">نمط حياتك</string>
+    <string name="onboarding_lifestyle_preferences_subtitle">أخبرنا عن عاداتك اليومية لتخصيص تجربتك</string>
+    <string name="onboarding_field_meal_count">عدد الوجبات اليومية</string>
+    <string name="onboarding_field_meal_count_error">الرجاء إدخال عدد وجبات صحيح</string>
+    <string name="onboarding_field_sleep_time">موعد النوم (اختياري)</string>
+    <string name="onboarding_field_wake_time">موعد الاستيقاظ (اختياري)</string>
+    <string name="onboarding_field_budget_level">مستوى الميزانية</string>
+    <string name="onboarding_field_unit_system">نظام القياس</string>
+    <string name="onboarding_field_reminders">التذكيرات</string>
+    <string name="reminder_workout">تذكير بالتمرين</string>
+    <string name="reminder_meal">تذكير بالوجبات</string>
+    <string name="reminder_sleep">تذكير بالنوم</string>
+    <string name="reminder_hydration">تذكير بشرب الماء</string>
+    <string name="budget_level_low">منخفضة</string>
+    <string name="budget_level_medium">متوسطة</string>
+    <string name="budget_level_high">مرتفعة</string>
+    <string name="unit_system_metric">متري (كجم/سم)</string>
+    <string name="unit_system_imperial">إمبراطوري (رطل/بوصة)</string>
+
+    <!-- إكمال التسجيل (Phase 02F — Complete Onboarding) -->
+    <string name="onboarding_complete_checking">جارٍ التحقق من بياناتك…</string>
+    <string name="onboarding_complete_success">تم إعداد حسابك بنجاح، جارٍ الانتقال إلى الرئيسية…</string>
+    <string name="onboarding_complete_incomplete_title">لم يتم استكمال البيانات بعد</string>
+    <string name="onboarding_complete_incomplete_body">يجب إكمال الملف الشخصي والهدف وتفضيلاتك قبل المتابعة إلى الرئيسية.</string>
+    <string name="onboarding_complete_retry">إعادة المحاولة</string>
+
+    <!-- الملف الشخصي (Phase 02G — Profile Screen) -->
+    <string name="profile_title">ملفي الشخصي</string>
+    <string name="settings_go_profile">عرض ملفي الشخصي</string>
+    <string name="profile_section_profile">المعلومات الأساسية</string>
+    <string name="profile_section_goal">الهدف</string>
+    <string name="profile_section_preferences">التفضيلات</string>
+    <string name="profile_section_missing">لا توجد بيانات محفوظة بعد لهذا القسم</string>
+    <string name="profile_save_changes">حفظ التغييرات</string>
 </resources>

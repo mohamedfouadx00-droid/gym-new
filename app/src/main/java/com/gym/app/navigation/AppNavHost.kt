@@ -8,7 +8,11 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.gym.app.ui.screens.HomeScreen
 import com.gym.app.ui.screens.OnboardingBasicProfileScreen
-import com.gym.app.ui.screens.OnboardingNextPlaceholderScreen
+import com.gym.app.ui.screens.OnboardingCompleteScreen
+import com.gym.app.ui.screens.OnboardingGoalSetupScreen
+import com.gym.app.ui.screens.OnboardingLifestylePreferencesScreen
+import com.gym.app.ui.screens.OnboardingWorkoutPreferencesScreen
+import com.gym.app.ui.screens.ProfileScreen
 import com.gym.app.ui.screens.ProgressScreen
 import com.gym.app.ui.screens.SettingsScreen
 import com.gym.app.ui.screens.StartScreen
@@ -47,11 +51,15 @@ fun AppNavHost(
         composable(Routes.Settings.route) {
             SettingsScreen(navController = navController)
         }
+        composable(Routes.Profile.route) {
+            ProfileScreen(navController = navController)
+        }
 
-        // PHASE 01H-02B — Onboarding sub-graph. Nested so future
-        // onboarding steps (Goal Setup, Workout Preferences, Lifestyle
-        // Preferences, completion) can be added inside this graph only,
-        // without touching the top-level destinations above.
+        // PHASE 01H-02B / 02C-02F — Onboarding sub-graph. Nested so the
+        // whole onboarding flow (Basic Profile, Goal Setup, Workout
+        // Preferences, Lifestyle Preferences, completion) stays inside
+        // this graph only, without touching the top-level destinations
+        // above.
         navigation(
             route = Routes.Onboarding.Graph.route,
             startDestination = Routes.Onboarding.BasicProfile.route
@@ -59,8 +67,17 @@ fun AppNavHost(
             composable(Routes.Onboarding.BasicProfile.route) {
                 OnboardingBasicProfileScreen(navController = navController)
             }
-            composable(Routes.Onboarding.NextPlaceholder.route) {
-                OnboardingNextPlaceholderScreen(navController = navController)
+            composable(Routes.Onboarding.GoalSetup.route) {
+                OnboardingGoalSetupScreen(navController = navController)
+            }
+            composable(Routes.Onboarding.WorkoutPreferences.route) {
+                OnboardingWorkoutPreferencesScreen(navController = navController)
+            }
+            composable(Routes.Onboarding.LifestylePreferences.route) {
+                OnboardingLifestylePreferencesScreen(navController = navController)
+            }
+            composable(Routes.Onboarding.Complete.route) {
+                OnboardingCompleteScreen(navController = navController)
             }
         }
     }
