@@ -20,4 +20,28 @@ sealed class Routes(val route: String) {
     data object Workout : Routes("workout")
     data object Progress : Routes("progress")
     data object Settings : Routes("settings")
+
+    /**
+     * PHASE 01H-02B — STARTUP & BASIC ONBOARDING
+     *
+     * Dedicated onboarding sub-graph. Kept as its own nested set of routes
+     * (rather than flat top-level routes) so future onboarding steps (Goal
+     * Setup, Workout Preferences, Lifestyle Preferences, completion) can be
+     * added without touching [Routes.Start] or the main feature
+     * destinations above.
+     */
+    sealed class Onboarding(route: String) : Routes(route) {
+        /** Graph route used to nest the onboarding flow inside [AppNavHost]. */
+        data object Graph : Onboarding("onboarding_graph")
+
+        /** First real onboarding screen: basic profile input. */
+        data object BasicProfile : Onboarding("onboarding_basic_profile")
+
+        /**
+         * Placeholder destination reached after a valid basic profile is
+         * saved. Reserved for future Goal Setup (Phase 02C). Implements no
+         * feature logic itself.
+         */
+        data object NextPlaceholder : Onboarding("onboarding_next_placeholder")
+    }
 }

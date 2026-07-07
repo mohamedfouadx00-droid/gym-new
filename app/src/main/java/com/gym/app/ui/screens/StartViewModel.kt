@@ -1,42 +1,69 @@
 package com.gym.app.ui.screens
 
 import androidx.lifecycle.ViewModel
-import com.gym.app.core.di.AppInfoProvider
+import androidx.lifecycle.viewModelScope
+import com.gym.app.domain.appstate.AppStateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * PHASE 01C — DEPENDENCY INJECTION FOUNDATION
+ * PHASE 01H — APP START LOGIC
  *
- * Immutable UI state exposed by [StartViewModel]. Contains only technical
- * diagnostic information, never real feature or user data.
+ * The one-time startup routing decision, derived from [AppStateRepository]
+ * (Phase 01G), kept separate from UI rendering ([StartScreen] only reacts
+ * to [destination] — it contains no decision logic itself).
+ *
+ * Exactly three possible outcomes, matching the three startup cases:
+ *
+ * - [StartDestination.Onboarding] — `onboardingCompleted == false`, or
+ *   `onboardingCompleted == true` but `activeUserId == null` (safe
+ *   fallback: onboarding was marked complete but there is no active user
+ *   to show Home for).
+ * - [StartDestination.Home] — `onboardingCompleted == true` and
+ *   `activeUserId != null`.
+ * - [StartDestination.Undetermined] — initial value only, before the
+ *   first [com.gym.app.domain.appstate.AppState] emission has been read.
+ *   [StartScreen] must not navigate while in this state.
  */
-data class StartUiState(
-    val isDependencyInjectionReady: Boolean = false,
-    val applicationName: String = ""
-)
+sealed class StartDestination {
+    data object Undetermined : StartDestination()
+    data object Onboarding : StartDestination()
+    data object Home : StartDestination()
+}
 
 /**
- * A minimal, purely technical ViewModel whose only job is to prove that
- * Hilt ViewModel injection works: [AppInfoProvider] is received through
- * the constructor, and Hilt is responsible for supplying it.
- *
- * This ViewModel contains no real feature logic. It is temporarily wired
- * to [StartScreen] only, to keep the verification surface minimal.
+ * Reads [AppStateRepository.appState] once (the current state is enough to
+ * make a one-time startup routing decision; this is not a screen that
+ * needs to keep reacting to later app-state changes) on a coroutine, never
+ * blocking the main thread, and exposes the routing result as a
+ * [StateFlow] for [StartScreen] to observe and act on.
  */
 @HiltViewModel
 class StartViewModel @Inject constructor(
-    appInfoProvider: AppInfoProvider
+    private val appStateRepository: AppStateRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        StartUiState(
-            isDependencyInjectionReady = true,
-            applicationName = appInfoProvider.getApplicationName()
-        )
-    )
-    val uiState: StateFlow<StartUiState> = _uiState.asStateFlow()
+    private val _destination = MutableStateFlow<StartDestination>(StartDestination.Undetermined)
+    val destination: StateFlow<StartDestination> = _destination.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val appState = appStateRepository.appState.first()
+
+            _destination.value = if (appState.onboardingCompleted && appState.activeUserId != null) {
+                // Case 2: onboarding done and an active user exists -> Home.
+                StartDestination.Home
+            } else {
+                // Case 1 (onboarding not completed) and Case 3
+                // (onboardingCompleted == true but activeUserId == null,
+                // safely falling back to onboarding) both resolve here.
+                StartDestination.Onboarding
+            }
+        }
+    }
 }

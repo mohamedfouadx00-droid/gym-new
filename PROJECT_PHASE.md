@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-Phase: 01G
-Name: DataStore Foundation
+Phase: 01H-02B
+Name: Startup & Basic Onboarding
 Status: Pending GitHub Validation
-Last Build: Not run locally (sandbox has no Android SDK, no Gradle, no Kotlin compiler, and no network access to download any of them — verified again before starting this phase; same constraint as 01B, 01C, 01D, 01E, and 01F). Static verification only was performed (see below). Real build/test verification pending via GitHub Actions.
-Next Phase: 01H — App Start Logic
+Last Build: Not run locally (sandbox has no Android SDK, no Gradle wrapper jar, no Kotlin compiler, and no network access to download any of them — verified again before starting this phase: `services.gradle.org` returned "Host not in allowlist"; same constraint as every prior phase). Static verification only was performed (see below). Real build/test verification pending via GitHub Actions.
+Next Phase: 02C — Goal Setup
 
 ---
 
@@ -54,57 +54,70 @@ Status: Completed
 Last Build: Successful via GitHub Actions
 Next Phase: 01G — DataStore Foundation
 
+### Phase 01G — DataStore Foundation
+Phase: 01G
+Name: DataStore Foundation
+Status: Completed
+Last Build: Successful via GitHub Actions
+Next Phase: 01H-02B — Startup & Basic Onboarding
+
 ---
 
-## ملاحظة صادقة حول حالة Build لمرحلة 01G
+## ملاحظة صادقة حول حالة Build لمرحلة 01H-02B
 
-بيئة التنفيذ الحالية (Sandbox) **لا تملك اتصال إنترنت ولا Android SDK ولا Gradle ولا Kotlin
-compiler مثبت مسبقًا** — تم التحقق من هذا فعليًا مرة أخرى قبل البدء في هذه المرحلة (نفس القيد
-الذي كان موجودًا في كل المراحل السابقة، لم يتغير شيء في البيئة؛ تم اختبار الاتصال بـ
-`services.gradle.org` فعليًا وعاد `403 host_not_allowed`). لذلك لم يتم تشغيل
-`./gradlew testDebugUnitTest` أو `./gradlew assembleDebug` فعليًا هنا، ولا يمكنني أن أدّعي
-نجاحها.
+بيئة التنفيذ الحالية (Sandbox) **لا تملك اتصال إنترنت، ولا Android SDK، ولا ملف
+`gradle-wrapper.jar`، ولا Kotlin compiler مثبت مسبقًا** — تم التحقق من هذا فعليًا قبل البدء في
+هذه المرحلة:
 
-بدلاً من ذلك تم عمل تحقق استاتيكي دقيق لهذه المرحلة تحديدًا:
+- `./gradlew --version` فشل بـ `ClassNotFoundException:
+  org.gradle.wrapper.GradleWrapperMain` (لا يوجد `gradle/wrapper/gradle-wrapper.jar` في الـ
+  ZIP، كما هو متوقع لمستودع Android نموذجي).
+- محاولة الوصول لـ `services.gradle.org` (لتنزيل توزيعة Gradle) أعادت رفضًا صريحًا من طبقة
+  الشبكة: `Host not in allowlist`.
 
-- التحقق من توازن الأقواس `{ } ( ) [ ]` في كل ملف Kotlin جديد (5 ملفات إنتاج + 1 ملف اختبار
-  وحدة)، عبر سكربت Python مخصص يتجاهل النصوص داخل الـ strings/التعليقات — جميعها متوازنة.
-- **مقارنة بايت-لبايت** لكل ملفات المشروع بأكملها مع نسخة الـ ZIP المرجعية لمرحلة 01F: الفروق
-  الوحيدة المكتشفة في كل الشجرة هي (أ) 5 ملفات جديدة تحت `domain/appstate/`, `data/appstate/`,
-  و`core/di/` (DataStoreModule.kt, AppStateRepositoryModule.kt) + ملف اختبار جديد واحد، و(ب)
-  إضافة سطر dependency واحد ورفع `versionName` داخل `app/build.gradle.kts`. كل ملف آخر
-  (`domain/model/*`, `domain/repository/*`, `data/local/entity/*`, `data/local/dao/*`,
-  `data/local/converters/*`, `data/local/AppDatabase.kt`, `data/mapper/*`,
-  `data/repository/*`, `core/di/DatabaseModule.kt`, `core/di/RepositoryModule.kt`,
-  `core/di/AppInfoProvider.kt`, `navigation/*`, `ui/*`, `GymApplication.kt`, `MainActivity.kt`,
-  `AndroidManifest.xml`, `build.gradle.kts` الجذري, `settings.gradle.kts`, `gradle.properties`,
-  `gradle/wrapper/*`, `gradlew`, `gradlew.bat`) — مطابق تمامًا، بدون أي تعديل.
-- التأكد أن `domain/appstate/AppState.kt` و `domain/appstate/AppStateRepository.kt` لا يحتويان
-  أي Room annotation، أي نوع DataStore/Preferences، أو أي نوع Android framework — بحث آلي، لا
-  نتيجة.
-- التأكد أن `AppStateRepositoryImpl` يستقبل `DataStore<Preferences>` فقط عبر الـ constructor،
-  ولا يستدعي `AppDatabase` أو أي DAO إطلاقًا (بحث آلي عن `Dao`/`AppDatabase` داخل
-  `data/appstate/` — لا نتيجة).
-- التأكد أن `DataStoreModule` و`AppStateRepositoryModule` منفصلان تمامًا عن
-  `DatabaseModule`/`RepositoryModule` الموجودين (لم يُعدَّل أي منهما — تحقق بايت-لبايت أعلاه).
-- التأكد من عدم إضافة أي حقل units/UnitSystem إلى DataStore (بحث آلي عن `UnitSystem` داخل
-  `domain/appstate/` و`data/appstate/` — لا نتيجة، لأن `UnitSystem` ينتمي لـ `UserPreferences`
-  في Room فقط، كما هو موثّق في القسم 4.11.1 من `PROJECT_HANDOFF.md`).
-- التأكد من عدم إضافة أي Onboarding UI أو أي شاشة UI جديدة، وعدم تعديل أي ملف تحت `ui/` (تحقق
-  بايت-لبايت أعلاه).
-- التأكد من عدم إضافة أي App Start Logic فعلي (لا تعديل على `MainActivity.kt`,
-  `GymApplication.kt`, أو `navigation/`).
-- التأكد من عدم إضافة أي Use Case (بحث آلي عن `*UseCase*` في `main/` — لا نتيجة).
-- التأكد من عدم وجود أي بيانات مستخدم Hardcoded داخل `main/` (فقط قيم اختبار طبيعية داخل
-  `src/test`).
-- التأكد من عدم بدء أي عمل من Phase 01H.
+لذلك لم يتم تشغيل `./gradlew testDebugUnitTest` أو `./gradlew assembleDebug` فعليًا هنا، ولا
+يمكنني أن أدّعي نجاحها. هذا نفس القيد الموجود في كل مرحلة سابقة (01B–01G).
+
+**ما تم عمله بدلاً من ذلك (تحقق استاتيكي دقيق لهذه المرحلة تحديدًا):**
+
+- التحقق من توازن الأقواس `{ } ( ) [ ]` في كل ملف Kotlin جديد أو مُعدَّل (7 ملفات) عبر سكربت
+  Python مخصص يتجاهل النصوص داخل الـ strings/التعليقات — جميعها متوازنة.
+- مقارنة كامل شجرة الملفات مع الـ ZIP المرجعي لمرحلة 01G: الفروق الوحيدة المكتشفة هي (أ) 3
+  ملفات جديدة تحت `ui/screens/` (شاشتا Onboarding + ViewModel الخاص بهما)، (ب) تعديل
+  `navigation/Routes.kt` و`navigation/AppNavHost.kt` (إضافة onboarding sub-graph فقط)، (ج)
+  تعديل `ui/screens/StartScreen.kt` و`ui/screens/StartViewModel.kt` (منطق بدء التشغيل)، (د)
+  إضافة سلاسل نصية عربية جديدة إلى `strings.xml`. لا تعديل على أي ملف Room/Repository/DataStore
+  موجود من 01D–01G (تحقق بايت-لبايت)، ولا تعديل على `app/build.gradle.kts` (لم تُضَف أي
+  dependency جديدة في هذه المرحلة).
+- التأكد أن `StartViewModel` يقرأ فقط من `AppStateRepository.appState` (Phase 01G) عبر
+  `viewModelScope.launch` + `Flow.first()` — بحث آلي لا يوجد أي استدعاء لـ
+  `DataStore<Preferences>` أو `AppDatabase`/DAOs مباشرة من `ui/screens/`.
+- التأكد أن `OnboardingBasicProfileViewModel` يحقن `UserProfileRepository` و
+  `AppStateRepository` فقط (الواجهات، وليس التنفيذات أو الـ DAOs مباشرة).
+- التأكد أن `userId` يُنشأ عبر `java.util.UUID.randomUUID()` في كل مسار تنفيذ، ولا توجد أي قيمة
+  نصية ثابتة تشبه `"user1"` أو ما شابه — بحث آلي، لا نتيجة.
+- التأكد أن `onboardingCompleted` لا يُضبط إلى `true` في أي مكان ضمن ملفات هذه المرحلة — بحث
+  آلي عن `setOnboardingCompleted` خارج `AppStateRepositoryImpl`/اختباراتها الموجودة من 01G — لا
+  نتيجة جديدة.
+- التأكد من عدم إضافة أي منطق Goal Setup/Workout Preferences/Lifestyle Preferences/onboarding
+  completion — بحث آلي عن هذه المصطلحات في الملفات الجديدة — لا نتيجة.
+- التأكد من عدم تعديل أي ميزة Home حقيقية (لا تزال `HomeScreen` شاشة اختبار تنقل كما هي).
+- التأكد من عدم وجود أي نص إنجليزي ظاهر للمستخدم: كل نص جديد يمر عبر
+  `res/values/strings.xml` فقط، ولا يوجد `res/values-ar/`.
+- التأكد من عدم بدء أي عمل من Phase 02C.
+
+**لم يتم تشغيل اختبارات الوحدة الجديدة تلقائيًا** (لا توجد بيئة JVM/Gradle قادرة على تشغيل
+JUnit هنا)؛ لم تُضَف اختبارات وحدة جديدة في هذه المرحلة تحديدًا (راجع القسم أدناه للتفاصيل)
+لأن منطق التحقق (validation) والتوجيه (routing) في هذه المرحلة بسيط بما يكفي ليُراجَع
+استاتيكيًا بثقة معقولة، وبنية `AppStateRepositoryImplTest`/`*RepositoryImplTest` الموجودة من
+01F/01G تغطي فعليًا السلوك الذي تعتمد عليه هاتان الـ ViewModels (`AppStateRepository`,
+`UserProfileRepository`) دون تكراره.
 
 **الحالة الحقيقية:** `Status: Pending GitHub Validation` — التزامًا بالصدق وعدم الادعاء بنجاح
-لم يحدث فعليًا محليًا (لا للـ build، ولا لاختبارات الوحدة الجديدة). سيتم تأكيد النجاح بعد أول
-Push إلى main عبر GitHub Actions.
+لم يحدث فعليًا محليًا. سيتم تأكيد النجاح بعد أول Push إلى main عبر GitHub Actions.
 
-الـ Build/Tests الحقيقيان سيتم التحقق منهما تلقائيًا عند أول Push إلى main عبر GitHub Actions.
-بعد أن تؤكد نجاحهما، حدّث هذا الملف إلى:
+الـ Build الحقيقي سيتم التحقق منه تلقائيًا عند أول Push إلى main عبر GitHub Actions. بعد أن
+تؤكد نجاحه، حدّث هذا الملف إلى:
 
 ```
 Status: Completed

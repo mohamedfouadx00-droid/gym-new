@@ -3,12 +3,12 @@ package com.gym.app.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,24 +21,45 @@ import com.gym.app.R
 import com.gym.app.navigation.Routes
 
 /**
- * PHASE 01B — NAVIGATION FOUNDATION
- * PHASE 01C — DEPENDENCY INJECTION FOUNDATION
+ * PHASE 01H — APP START LOGIC
  *
- * Start destination of the navigation graph. This is a temporary technical
- * screen only, used to prove that navigation to the other four destinations
- * works correctly. It implements no real feature.
+ * Start destination of the navigation graph. Purely a routing screen now:
+ * all startup decision logic lives in [StartViewModel] (see
+ * [StartDestination]); this composable only observes the resulting
+ * [StartDestination] and performs the corresponding one-time navigation
+ * once it is known, replacing itself in the back stack so the user can
+ * never navigate back to this transient screen.
  *
- * As of Phase 01C it is also temporarily wired to [StartViewModel] (via
- * hiltViewModel()) purely to prove that Hilt ViewModel injection works end
- * to end. The small technical status line rendered below the title carries
- * no feature meaning.
+ * While [StartDestination.Undetermined] (briefly, while the DataStore read
+ * is in flight on a background coroutine), a minimal loading indicator is
+ * shown — no feature UI, no blocking of the main thread.
  */
 @Composable
 fun StartScreen(
     navController: NavHostController,
     viewModel: StartViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val destination by viewModel.destination.collectAsStateWithLifecycle()
+
+    LaunchedEffect(destination) {
+        when (destination) {
+            is StartDestination.Home -> {
+                navController.navigate(Routes.Home.route) {
+                    popUpTo(Routes.Start.route) { inclusive = true }
+                }
+            }
+
+            is StartDestination.Onboarding -> {
+                navController.navigate(Routes.Onboarding.Graph.route) {
+                    popUpTo(Routes.Start.route) { inclusive = true }
+                }
+            }
+
+            is StartDestination.Undetermined -> {
+                // Still resolving app state; do nothing yet.
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -47,56 +68,11 @@ fun StartScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        CircularProgressIndicator()
         Text(
-            text = stringResource(id = R.string.start_title),
-            style = MaterialTheme.typography.headlineMedium
+            text = stringResource(id = R.string.start_loading),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(top = 16.dp)
         )
-
-        if (uiState.isDependencyInjectionReady) {
-            Text(
-                text = stringResource(
-                    id = R.string.start_di_status,
-                    uiState.applicationName
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp),
-            onClick = { navController.navigate(Routes.Home.route) }
-        ) {
-            Text(text = stringResource(id = R.string.nav_go_home))
-        }
-
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-            onClick = { navController.navigate(Routes.Workout.route) }
-        ) {
-            Text(text = stringResource(id = R.string.nav_go_workout))
-        }
-
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-            onClick = { navController.navigate(Routes.Progress.route) }
-        ) {
-            Text(text = stringResource(id = R.string.nav_go_progress))
-        }
-
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-            onClick = { navController.navigate(Routes.Settings.route) }
-        ) {
-            Text(text = stringResource(id = R.string.nav_go_settings))
-        }
     }
 }

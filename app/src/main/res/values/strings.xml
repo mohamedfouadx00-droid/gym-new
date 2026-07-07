@@ -21,4 +21,38 @@
 
     <!-- تحقق تقني من عمل الحقن (Phase 01C — Dependency Injection Foundation) -->
     <string name="start_di_status">الحقن التقني يعمل بنجاح — تطبيق %1$s</string>
+
+    <!-- منطق بدء التشغيل (Phase 01H — App Start Logic) -->
+    <string name="start_loading">جارٍ التحقق من حالة التطبيق…</string>
+
+    <!-- الملف الشخصي الأساسي (Phase 02B — Basic Profile Input) -->
+    <string name="onboarding_basic_profile_title">معلوماتك الأساسية</string>
+    <string name="onboarding_basic_profile_subtitle">أدخل بياناتك الأساسية لإنشاء ملفك الشخصي</string>
+    <string name="onboarding_field_name">الاسم</string>
+    <string name="onboarding_field_name_error">الرجاء إدخال اسم صحيح</string>
+    <string name="onboarding_field_age">العمر</string>
+    <string name="onboarding_field_age_error">الرجاء إدخال عمر صحيح بين %1$d و%2$d</string>
+    <string name="onboarding_field_gender">الجنس</string>
+    <string name="onboarding_gender_male">ذكر</string>
+    <string name="onboarding_gender_female">أنثى</string>
+    <string name="onboarding_gender_unspecified">تفضّل عدم التحديد</string>
+    <string name="onboarding_field_height">الطول (سم)</string>
+    <string name="onboarding_field_height_error">الرجاء إدخال طول صحيح</string>
+    <string name="onboarding_field_weight">الوزن الحالي (كجم)</string>
+    <string name="onboarding_field_weight_error">الرجاء إدخال وزن صحيح</string>
+    <string name="onboarding_field_experience_level">مستوى الخبرة</string>
+    <string name="experience_level_beginner">مبتدئ</string>
+    <string name="experience_level_intermediate">متوسط</string>
+    <string name="experience_level_advanced">متقدم</string>
+    <string name="onboarding_field_activity_level">مستوى النشاط اليومي</string>
+    <string name="activity_level_sedentary">قليل الحركة</string>
+    <string name="activity_level_lightly_active">نشاط خفيف</string>
+    <string name="activity_level_moderately_active">نشاط متوسط</string>
+    <string name="activity_level_very_active">نشاط عالٍ</string>
+    <string name="activity_level_extra_active">نشاط عالٍ جدًا</string>
+    <string name="onboarding_save_and_continue">حفظ ومتابعة</string>
+
+    <!-- عنصر نائب لمرحلة تالية (Phase 02C — Goal Setup لاحقًا) -->
+    <string name="onboarding_next_placeholder_title">تم حفظ ملفك الشخصي</string>
+    <string name="onboarding_next_placeholder_body">الخطوة التالية (تحديد الهدف) ستتوفر قريبًا.</string>
 </resources>
